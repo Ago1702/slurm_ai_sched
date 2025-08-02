@@ -53,10 +53,3 @@ class UserGenerator(object):
             group_id = 1000 + gr_i
             users.add(User(usr, usr_id, group, group_id))
         return users, n_group
-        
-
-
-
-    
-
-    
