@@ -70,6 +70,12 @@ class NodeGenerator(object):
     def set_seed(self, seed:int):
         rnd.seed(seed)
 
+    def generate_sockets(self, bot, top, num):
+        ret = rnd.randint(bot, top)
+        while num % ret != 0:
+            ret -= 1
+        return ret
+
     def generate_node(self, name:str, num:int|tuple[int], features:list=[], big_mem:bool=False, gpu:bool=False, many_cores:bool=False):
         if many_cores:
             procs = rnd.randint(self.many_min_proc, self.many_max_proc)
@@ -77,8 +83,7 @@ class NodeGenerator(object):
         else:
             procs = rnd.randint(self.min_proc, self.max_proc)
         procs = 1 if procs == 0 else procs * 4
-        sockets = rnd.randint(self.min_sock, self.max_sock)
-        sockets = procs if sockets > procs else sockets
+        sockets = self.generate_sockets(self.min_sock, self.max_sock, procs)
         if big_mem:
             memory = rnd.randint(self.big_min_mem, self.big_max_mem)
             features.append('BigMem')
@@ -98,6 +103,7 @@ class TopologyGenerator(object):
     def __init__(self):
         pass
 
+    
 if __name__ == '__main__':
         default = Node('DEFAULT', 12, 2, memory=48000)
         nodes_n = Node('n', 12, 2, 4, features=['IB','CPU-N'])
@@ -114,6 +120,7 @@ if __name__ == '__main__':
         nodelist.append(node_k)
         node_mc = gen.generate_node('f', 4, ['IB', 'CPU-F'], many_cores=True)
         nodelist.append(node_mc)
+        gen.max_sock = 48
         node_gen = gen.generate_node('i', 2, ['IB', 'CPU-I'], big_mem=True, gpu=True, many_cores=True)
         nodelist.append(node_gen)
         for node in nodelist:
