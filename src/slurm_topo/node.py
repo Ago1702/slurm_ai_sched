@@ -107,15 +107,30 @@ class TopologyGenerator(object):
         self.gpu = 0.3
         self.many_cores = 0.5
         self.mixed = 0.6
+        self.param_dict = {
+                    'gpu': False,
+                    'many_cores': False,
+                    'big_mem': False
+                }
         
         self.c = 'a'
         pass
 
-    def increment_char(self):
+    def increment_char_(self):
         if self.c == 'z':
             self.c = 'a'
         else:
             self.c = chr(ord(self.c) + 1)
+    
+    def increment_char(self, c):
+        if c == 'z':
+            return 'a'
+        else:
+            return chr(ord(c) + 1)
+
+    def randomize_param(self):
+        for k in self.param_dict.keys():
+            self.param_dict[k] = rnd.choice([True, False])
     
     def group_gen(self):
         node_number = rnd.randint(self.min_size, self.max_size)
@@ -124,6 +139,15 @@ class TopologyGenerator(object):
             return self.node_gen.generate_node(name=self.c, num=node_number, features=[f'CPU-{self.c.capitalize()}'], gpu=True)
         elif p < self.many_cores:
             return self.node_gen.generate_node(name=self.c, num=node_number, features=[f'CPU-{self.c.capitalize()}'], many_cores=True)
+        elif p < self.mixed:
+            nodes = []
+            sub_name = 'a'
+            for i in range(node_number):
+                self.randomize_param()
+                node = self.node_gen.generate_node(name=f"{self.c}{sub_name}", num=1, features=[f'CPU-{self.c.capitalize()}'], **self.param_dict)
+                nodes.append(node)
+                sub_name = self.increment_char(sub_name)
+            return nodes
         else:
             return self.node_gen.generate_node(name=self.c, num=node_number, features=[f'CPU-{self.c.capitalize()}'])
         
@@ -134,7 +158,7 @@ class TopologyGenerator(object):
         for i in range(group_num):
             group = self.group_gen()
             topo.append(group)
-            self.increment_char()
+            self.increment_char_()
         return topo
 
 
@@ -161,8 +185,13 @@ if __name__ == '__main__':
         node_gen = gen.generate_node('i', 2, ['IB', 'CPU-I'], big_mem=True, gpu=True, many_cores=True)
         nodelist.append(node_gen)
         for node in nodelist:
-            print(node.slurm_formatting())
+            pass
+            #print(node.slurm_formatting())
         topo_gen = TopologyGenerator(2, 10)
         topo = topo_gen.generate_topology(6)
         for node in topo:
-            print(node.slurm_formatting())
+            if isinstance(node, list):
+                for node_ in node:
+                    print(node_.slurm_formatting())
+            else:
+                print(node.slurm_formatting())
