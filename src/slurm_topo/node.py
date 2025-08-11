@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 from enum import Enum
 import numpy.random as rnd
+import numpy as np
 
 class Node(object):
     '''
@@ -16,6 +17,12 @@ class Node(object):
         self.thread_core = thread_core
         self.gres = gres
         self.features = features
+        
+        if isinstance(num, list):
+            cum_number = num[1] - num[0]
+        else:
+            cum_number = num if num != 0 else 1 
+        self.cum_number = cum_number
 
     def slurm_formatting(self):
         slurm_format = f'NodeName='
@@ -45,7 +52,22 @@ class Node(object):
         feat = ','.join(self.features)
         slurm_format += feat
         return slurm_format
+
+class Topology:
+
+    def __init__(self, topology_list:list[Node|list]):
+        self.nodes:list[Node] = np.array(topology_list, dtype=object).ravel().tolist()
     
+    def node_number(self, gres=0, procs=0, mem=0, costraints:set={}):
+        node_number = 0
+        for node in self.nodes:
+            if node.gres < gres or node.procs < procs or node.memory < mem:
+                continue
+            prop = set(node.features)
+            if len(costraints) != 0 and not costraints.issubset(prop):
+                continue
+            node_number += node.cum_number
+        return node_number
 
 class NodeGenerator(object):
     '''
@@ -172,7 +194,7 @@ if __name__ == '__main__':
         nodelist = [default, nodes_n, nodes_m, g, mem]
         gen = NodeGenerator()
         #gen.set_seed(224)
-        #rnd.seed(224)
+        rnd.seed(22)
         node_a = gen.generate_node('a', 4, ['IB', 'CPU-A'])
         nodelist.append(node_a)
         node_s = gen.generate_node('s', 8, ['IB', 'CPU-S'], big_mem=True)
@@ -195,3 +217,8 @@ if __name__ == '__main__':
                     print(node_.slurm_formatting())
             else:
                 print(node.slurm_formatting())
+        topo = Topology(nodelist)
+        for node in topo.nodes:
+            print(node.slurm_formatting())
+
+        print(topo.node_number(2, 12, 512000))
