@@ -21,7 +21,7 @@ class Node(object):
         if isinstance(num, list):
             cum_number = num[1] - num[0]
         else:
-            cum_number = num if num != 0 else 1 
+            cum_number = num
         self.cum_number = cum_number
 
     def slurm_formatting(self):
@@ -56,9 +56,39 @@ class Node(object):
 class Topology:
 
     def __init__(self, topology_list:list[Node|list]):
-        self.nodes:list[Node] = np.array(topology_list, dtype=object).ravel().tolist()
+        self.topo = topology_list
+        self.nodes:list[Node] = self.concatenate_list(topology_list)
+        num_tasks = 0
+        max_tasks_node = 0
+        max_mem = 0
+        max_gres = 0
+        num_nodes = 0
+        for node in self.nodes:
+            num_nodes += node.cum_number
+            num_tasks += node.procs
+            max_tasks_node = max(max_tasks_node, node.procs)
+            max_mem = max(max_mem, node.memory)
+            max_gres = max(max_gres, node.gres)
+        
+        self.num_nodes = num_nodes
+        self.num_tasks = num_tasks
+        self.max_tasks_node = max_tasks_node
+        self.max_mem = max_mem
+        self.max_gres = max_gres
+        self.partitions = []
+        self.qos = []
+        self.features = []
+
+    def concatenate_list(self, topo_list:list):
+        res = []
+        for e in topo_list:
+            if isinstance(e, list):
+                res.extend(self.concatenate_list(e))
+            else:
+                res.append(e)
+        return res
     
-    def node_number(self, gres=0, procs=0, mem=0, costraints:set={}):
+    def count_nodes(self, gres=0, procs=0, mem=0, costraints:set={}):
         node_number = 0
         for node in self.nodes:
             if node.gres < gres or node.procs < procs or node.memory < mem:
@@ -175,13 +205,13 @@ class TopologyGenerator(object):
         
 
 
-    def generate_topology(self, group_num) -> list[Node|list]:
+    def generate_topology(self, group_num) -> Topology:
         topo = []
         for i in range(group_num):
             group = self.group_gen()
             topo.append(group)
             self.increment_char_()
-        return topo
+        return Topology(topo)
 
 
     
@@ -211,14 +241,7 @@ if __name__ == '__main__':
             #print(node.slurm_formatting())
         topo_gen = TopologyGenerator(2, 10)
         topo = topo_gen.generate_topology(6)
-        for node in topo:
-            if isinstance(node, list):
-                for node_ in node:
-                    print(node_.slurm_formatting())
-            else:
-                print(node.slurm_formatting())
-        topo = Topology(nodelist)
         for node in topo.nodes:
             print(node.slurm_formatting())
 
-        print(topo.node_number(2, 12, 512000))
+        print(topo.count_nodes())
