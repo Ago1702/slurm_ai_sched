@@ -8,10 +8,10 @@ class Topology:
     def __init__(self, topology_list:list[Node|list]):
         self.topo = topology_list
         self.nodes:list[Node] = self.concatenate_list(topology_list)
-        num_tasks = {'DEFAULT': 0}
-        max_tasks_node = {'DEFAULT': 0}
-        max_mem = {'DEFAULT': 0}
-        max_gres = {'DEFAULT': 0}
+        num_tasks = {'DEFAULT': 0, 'ALL':0}
+        max_tasks_node = {'DEFAULT': 0, 'ALL':0}
+        max_mem = {'DEFAULT': 0, 'ALL':0}
+        max_gres = {'DEFAULT': 0, 'ALL':0}
         num_nodes = 0
         self.features = set(FEATURES)
         for k in self.features:
@@ -21,6 +21,10 @@ class Topology:
             max_gres[k] = 0
         for node in self.nodes:
             num_nodes += node.cum_number
+            num_tasks['ALL'] += node.procs
+            max_tasks_node['ALL'] = max(max_tasks_node['ALL'], node.procs)
+            max_mem['ALL'] = max(max_mem['ALL'], node.memory)
+            max_gres['ALL'] = max(max_gres['ALL'], node.gres)
             if len(node.features)==1:
                 num_tasks['DEFAULT'] += node.procs
                 max_tasks_node['DEFAULT'] = max(max_tasks_node['DEFAULT'], node.procs)

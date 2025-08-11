@@ -25,10 +25,11 @@ class JobGenerator:
     Class JobGenerator: a random job generator
     '''
 
-    def __init__(self, topology:Topology, max_long_job=24, max_short_job=60):
+    def __init__(self, topology:Topology, max_long_job=24, max_short_job=60, min_mem = 1000):
         self.max_long_job = max_long_job
         self.max_short_job = max_short_job
         self.topology = topology
+        self.min_mem = min_mem
 
     def set_seed(seed:int):
         rnd.seed(seed)
@@ -51,6 +52,14 @@ class JobGenerator:
         req_time_s = timedelta(hours=req_time.hour, minutes=req_time.minute).total_seconds()
         sim_walltime = rnd.randint(-1, req_time_s + 1)
         return req_time, sim_walltime
+
+    def generate_job_tasks(self, max_task, args={}):
+        n_task_nodes = rnd.randint(1, max_task)
+        num_nodes = self.topology.count_nodes(procs=n_task_nodes, **args)
+        if num_nodes == 0:
+            return 0, 0
+        n_tasks = rnd.randint(1, num_nodes + 1) * n_task_nodes
+        return n_task_nodes, n_tasks
     
     def stringfy_flags(self, req_time:time, n_tasks, tasks_nodes, account=None, constr=None, mem=0, gres=0) -> list[str]:
         flags = []
@@ -71,12 +80,47 @@ class JobGenerator:
         
         return flags
     
-    def generate_classic_job(self, job_id:str, user_id:str, account:str, long:bool=False):
+    def generate_classic_job(self, job_id:str, user_id:str, account:str, long:bool=False, feat='DEFAULT'):
         req_time, sim_walltime = self.generate_job_time(long)
-        n_task_nodes = rnd.randint(1, self.topology.max_tasks_node)
-        num_nodes = self.topology.count_nodes(procs=n_task_nodes)
-        n_tasks = rnd.randint(1, num_nodes + 1) * n_task_nodes
+        n_task_nodes, n_tasks = self.generate_job_tasks(self.topology.max_tasks_node[feat])
+        if n_task_nodes == 0:
+            return None
         flags = self.stringfy_flags(req_time, n_tasks, n_task_nodes, account)
+        return Job(job_id, sim_walltime, user_id, flags)
+    
+    def generate_gres(self, feat):
+        if self.topology.max_gres[feat] == 0:
+            return rnd.randint(1, self.topology.max_gres['ALL'] + 1) if self.topology.max_gres['ALL'] != 0 else 0
+        else:
+            return rnd.randint(1, self.topology.max_gres[feat] + 1)
+
+    def generate_gpu_job(self, job_id:str, user_id:str, account:str, long:bool=False, feat='DEFAULT'):
+        req_time, sim_walltime = self.generate_job_time(long)
+        gres = self.generate_gres(feat)
+        n_task_nodes, n_tasks = self.generate_job_tasks(self.topology.max_tasks_node[feat], {'gres':gres})
+        if n_task_nodes == 0:
+            return None
+        flags = self.stringfy_flags(req_time, n_tasks, n_task_nodes, account, gres=gres)
+        return Job(job_id, sim_walltime, user_id, flags)
+    
+    def generate_mem(self, feat):
+        mem = rnd.randint(self.min_mem, self.topology.max_mem[feat] + 1)
+        mem -= mem % 1000
+        return mem
+
+    def generate_generic_job(self, job_id:str, user_id:str, account:str, long:bool=False, feat='DEFAULT'):
+        req_time, sim_walltime = self.generate_job_time(long)
+        param = {}
+        if rnd.choice([True, False]):
+            gres = self.generate_gres(feat)
+            param['gres'] = gres
+        if rnd.choice([True, False]):
+            mem = self.generate_mem(feat)
+            param['mem'] = mem
+        n_task_nodes, n_tasks = self.generate_job_tasks(self.topology.max_tasks_node[feat], param)
+        if n_task_nodes == 0:
+            return None
+        flags = self.stringfy_flags(req_time, n_tasks, n_task_nodes, account, **param)
         return Job(job_id, sim_walltime, user_id, flags)
 
 if __name__ == '__main__':

@@ -99,7 +99,7 @@ class Topology:
                 res.append(e)
         return res
     
-    def count_nodes(self, gres=0, procs=0, mem=0, costraints:set={}):
+    def count_nodes(self, gres=0, procs=0, mem=0, costraints:set={}) -> int:
         node_number = 0
         for node in self.nodes:
             if node.gres < gres or node.procs < procs or node.memory < mem:
