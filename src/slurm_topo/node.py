@@ -1,4 +1,5 @@
 import numpy.random as rnd
+import re
 
 FEATURES = ['BigMem', 'ManyCores']
 
@@ -16,17 +17,29 @@ class Node(object):
         self.thread_core = thread_core
         self.gres = gres
         self.features = features
-        
+        if isinstance(num, list) and num[0] == 1:
+            self.num = num[1]
         if isinstance(num, list):
-            cum_number = num[1] - num[0]
+            cum_number = num[1] - num[0] + 1
         else:
             cum_number = num
         self.cum_number = cum_number
 
+    def node_name(self) -> str:
+        if isinstance(self.num, tuple):
+            slurm_format += f"{self.name}[{self.num[0]}-{self.num[1]}]" if self.num[0] != self.num[1] else f"{self.name}{self.num[0]}"
+        elif self.num == 0:
+            slurm_format += f"{self.name}"
+        elif self.num == 1:
+            slurm_format += f"{self.name}1"
+        else:
+            slurm_format += f"{self.name}[1-{self.num}]"
+        return slurm_format
+
     def slurm_formatting(self):
         slurm_format = f'NodeName='
         if isinstance(self.num, tuple):
-            slurm_format += f"{self.name}[{self.num[0]}-{self.num[1]}]"
+            slurm_format += f"{self.name}[{self.num[0]}-{self.num[1]}]" if self.num[0] != self.num[1] else f"{self.name}{self.num[0]}"
         elif self.num == 0:
             slurm_format += f"{self.name}"
         elif self.num == 1:
@@ -51,64 +64,6 @@ class Node(object):
         feat = ','.join(self.features)
         slurm_format += feat
         return slurm_format
-
-class Topology:
-
-    def __init__(self, topology_list:list[Node|list]):
-        self.topo = topology_list
-        self.nodes:list[Node] = self.concatenate_list(topology_list)
-        num_tasks = {'DEFAULT': 0}
-        max_tasks_node = {'DEFAULT': 0}
-        max_mem = {'DEFAULT': 0}
-        max_gres = {'DEFAULT': 0}
-        num_nodes = 0
-        self.features = set(FEATURES)
-        for k in self.features:
-            num_tasks[k] = 0
-            max_tasks_node[k] = 0
-            max_mem[k] = 0
-            max_gres[k] = 0
-        for node in self.nodes:
-            num_nodes += node.cum_number
-            if len(node.features)==1:
-                num_tasks['DEFAULT'] += node.procs
-                max_tasks_node['DEFAULT'] = max(max_tasks_node['DEFAULT'], node.procs)
-                max_mem['DEFAULT'] = max(max_mem['DEFAULT'], node.memory)
-                max_gres['DEFAULT'] = max(max_gres['DEFAULT'], node.gres)
-            else:
-                node_feat = set(node.features)
-                for feat in node_feat.intersection(self.features):
-                    num_tasks[feat] += node.procs
-                    max_tasks_node[feat] = max(max_tasks_node[feat], node.procs)
-                    max_mem[feat] = max(max_mem[feat], node.memory)
-                    max_gres[feat] = max(max_gres[feat], node.gres)
-        self.num_nodes = num_nodes
-        self.num_tasks = num_tasks
-        self.max_tasks_node = max_tasks_node
-        self.max_mem = max_mem
-        self.max_gres = max_gres
-        self.partitions = []
-        self.qos = []
-
-    def concatenate_list(self, topo_list:list):
-        res = []
-        for e in topo_list:
-            if isinstance(e, list):
-                res.extend(self.concatenate_list(e))
-            else:
-                res.append(e)
-        return res
-    
-    def count_nodes(self, gres=0, procs=0, mem=0, costraints:set={}) -> int:
-        node_number = 0
-        for node in self.nodes:
-            if node.gres < gres or node.procs < procs or node.memory < mem:
-                continue
-            prop = set(node.features)
-            if len(costraints) != 0 and not costraints.issubset(prop):
-                continue
-            node_number += node.cum_number
-        return node_number
 
 class NodeGenerator(object):
     '''
@@ -156,3 +111,60 @@ class NodeGenerator(object):
             return Node(name, procs, sockets, num, memory, features=features)
         gres = rnd.randint(self.min_gres, self.max_gres)
         return Node(name, procs, sockets, num, memory, gres=gres, features=features)
+    
+def node_parser(line:str) -> dict:
+    props = line.split()
+    args = {}
+    for prop in props:
+        prop, val = prop.split('=')
+        match prop:
+            case 'NodeName':
+                rx = re.compile(r'\d+')
+                num = rx.findall(val)
+                for i, _ in enumerate(num):
+                    num[i] = int(num[i])
+                if len(num) == 1:
+                    args['num'] = num[0]
+                elif len(num) != 0:
+                    args['num'] = num
+                args['name'] = re.sub(r'[^a-zA-Z]','',val)
+
+            case 'RealMemory':
+                args['memory'] = int(val)
+
+            case 'Procs':
+                args['procs'] = int(val)
+
+            case 'Sockets':
+                args['sockets'] = int(val)
+
+            case 'ThreadsPerCore':
+                args['thread_core'] = int(val)
+
+            case 'Feature':
+                args['features'] = val.split(',')
+            
+            case 'Gres':
+                rx = re.compile(r'gpu:\d+')
+                num = rx.findall(val)
+                if len(num) == 1:
+                    args['gres'] = int(re.sub(r'[^0-9]', '', num[0]))
+    return args
+
+def node_reader(lines:list[str]) -> list[Node]:
+    node_dicts = []
+    default = {}
+    for line in lines:
+        node_dict = node_parser(line)
+
+        if node_dict['name'] == 'DEFAULT':
+            default = node_dict
+        else:
+            node_dicts.append(node_dict)
+    
+    nodes = []
+    for node_dict in node_dicts:
+        for k in set(default.keys()).difference(node_dict.keys()):
+            node_dict[k] = default[k]
+        nodes.append(Node(**node_dict))
+    return nodes

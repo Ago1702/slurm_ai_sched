@@ -1,5 +1,5 @@
 from typing import Any
-from slurm_topo.node import Topology
+from slurm_topo.topology import Topology
 import numpy.random as rnd
 from datetime import time, timedelta
 
