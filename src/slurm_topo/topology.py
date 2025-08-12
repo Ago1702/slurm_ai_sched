@@ -7,7 +7,7 @@ class Topology:
 
     def __init__(self, topology_list:list[Node|list]):
         self.topo = topology_list
-        self.nodes:list[Node] = self.concatenate_list(topology_list)
+        self.nodes:list[Node] = [node for node in set(self.concatenate_list(topology_list))]
         num_tasks = {'DEFAULT': 0, 'ALL':0}
         max_tasks_node = {'DEFAULT': 0, 'ALL':0}
         max_mem = {'DEFAULT': 0, 'ALL':0}
@@ -131,3 +131,36 @@ class TopologyGenerator(object):
             topo.append(group)
             self.increment_char_()
         return Topology(topo)
+
+
+def read_topology(nodes:list[Node], lines:list[str]):
+    switches = {}
+    nodes_dict = {node.node_name(): node for node in nodes}
+    for line in lines:
+        prop = line.split(' ')
+        
+        if len(prop) < 2:
+            raise IOError('Bad Formatting')
+        name = prop[0]
+        name, switch = name.split('=')
+        if name != 'SwitchName':
+            raise IOError('Bad Formatting')
+        switches[switch] = []
+
+        for elem in prop[1:]:
+            name, val = elem.split('=')
+            if name == 'Nodes':
+                nodes_name = val.split(',')
+                for node_name in nodes_name:
+                    if node_name not in nodes_dict.keys():
+                        return None
+                    node = nodes_dict[node_name]
+                    switches[switch].append(node)
+            elif name == 'Switches':
+                switch_names = val.split(',')
+                for switch_name in switch_names:
+                    if switch_name not in switches.keys():
+                        return None
+                    switches[switch].append(switches[switch_name])
+    print(switch)
+    return switches[switch]

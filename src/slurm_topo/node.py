@@ -27,13 +27,13 @@ class Node(object):
 
     def node_name(self) -> str:
         if isinstance(self.num, tuple):
-            slurm_format += f"{self.name}[{self.num[0]}-{self.num[1]}]" if self.num[0] != self.num[1] else f"{self.name}{self.num[0]}"
+            slurm_format = f"{self.name}[{self.num[0]}-{self.num[1]}]" if self.num[0] != self.num[1] else f"{self.name}{self.num[0]}"
         elif self.num == 0:
-            slurm_format += f"{self.name}"
+            slurm_format = f"{self.name}"
         elif self.num == 1:
-            slurm_format += f"{self.name}1"
+            slurm_format = f"{self.name}1"
         else:
-            slurm_format += f"{self.name}[1-{self.num}]"
+            slurm_format = f"{self.name}[1-{self.num}]"
         return slurm_format
 
     def slurm_formatting(self):
@@ -65,6 +65,10 @@ class Node(object):
         slurm_format += feat
         return slurm_format
 
+    def __str__(self):
+        return self.node_name()
+    def __repr__(self):
+        return self.node_name()
 class NodeGenerator(object):
     '''
     Class NodeGenerator: Random Computing Node generator
@@ -134,9 +138,14 @@ def node_parser(line:str) -> dict:
 
             case 'Procs':
                 args['procs'] = int(val)
+            case 'CPUs':
+                args['procs'] = int(val)
 
             case 'Sockets':
                 args['sockets'] = int(val)
+            
+            case 'CoresPerSocket':
+                args['core_sockets'] = int(val)
 
             case 'ThreadsPerCore':
                 args['thread_core'] = int(val)
@@ -166,5 +175,9 @@ def node_reader(lines:list[str]) -> list[Node]:
     for node_dict in node_dicts:
         for k in set(default.keys()).difference(node_dict.keys()):
             node_dict[k] = default[k]
+        if 'procs' not in node_dict.keys():
+            node_dict['procs'] = node_dict['core_sockets'] * node_dict['sockets']
+        if 'core_sockets' in node_dict.keys():
+            node_dict.pop('core_sockets')
         nodes.append(Node(**node_dict))
     return nodes
