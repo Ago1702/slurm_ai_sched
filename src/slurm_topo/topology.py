@@ -70,9 +70,9 @@ class TopologyGenerator(object):
     Class TopologyGenerator: A simple topology generator
     '''
 
-    def __init__(self, min_size, max_size):
+    def __init__(self, min_size, max_size, node_gen=NodeGenerator()):
         #Add some probability
-        self.node_gen = NodeGenerator()
+        self.node_gen = node_gen
         self.min_size = min_size
         self.max_size = max_size
         self.gpu = 0.3
@@ -122,13 +122,14 @@ class TopologyGenerator(object):
         else:
             return self.node_gen.generate_node(name=self.c, num=node_number, features=[f'CPU-{self.c.capitalize()}'])
         
-
-
     def generate_topology(self, group_num) -> Topology:
         topo = []
         for i in range(group_num):
             group = self.group_gen()
-            topo.append(group)
+            if isinstance(group, list):
+                topo.append(group)
+            else:
+                topo.append([group])
             self.increment_char_()
         return Topology(topo)
 
@@ -162,5 +163,55 @@ def read_topology(nodes:list[Node], lines:list[str]):
                     if switch_name not in switches.keys():
                         return None
                     switches[switch].append(switches[switch_name])
-    print(switch)
     return switches[switch]
+
+class TopologyPrinter:
+
+    def __init__(self):
+        self.switch_name = 'A'
+
+    def increase(self):
+        if self.switch_name != 'Z':
+            self.switch_name = chr(ord(self.switch_name) + 1)
+        else:
+            self.switch_name = 'A'
+
+    def __print_switch__(self, f, topo:list[Node|list]):
+        name = f'IB{self.switch_name}'
+        print(name, topo)
+        self.increase()
+        node_list = []
+        switch_list = []
+        for node in topo:
+            if isinstance(node, Node):
+                node_list.append(node.node_name())
+            else:
+                switch_list.append(self.__print_switch__(f, node))
+        f.write(f'SwitchName={name}')
+        if len(node_list) != 0:
+            nodes = ','.join(node_list)
+            f.write(f' Nodes={nodes}')
+        if len(switch_list) != 0:
+            switches = ','.join(switch_list)
+            f.write(f' Switches={switches}')
+        f.write('\n')
+        return name
+
+    def print_topology(self, p, topo:list[Node|list]):
+        self.switch_name = 'A'
+        print(topo)
+        with open(p, 'w') as f:
+            node_list = []
+            switch_list = []
+            for node in topo:
+                if isinstance(node, Node):
+                    node_list.append(node.node_name())
+                else:
+                    switch_list.append(self.__print_switch__(f, node))
+            f.write('SwitchName=TOP')
+            if len(node_list) != 0:
+                nodes = ','.join(node_list)
+                f.write(f' Nodes={nodes}')
+            if len(switch_list) != 0:
+                switches = ','.join(switch_list)
+                f.write(f' Switches={switches}')
