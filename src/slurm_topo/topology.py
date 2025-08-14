@@ -178,7 +178,6 @@ class TopologyPrinter:
 
     def __print_switch__(self, f, topo:list[Node|list]):
         name = f'IB{self.switch_name}'
-        print(name, topo)
         self.increase()
         node_list = []
         switch_list = []
@@ -199,7 +198,6 @@ class TopologyPrinter:
 
     def print_topology(self, p, topo:list[Node|list]):
         self.switch_name = 'A'
-        print(topo)
         with open(p, 'w') as f:
             node_list = []
             switch_list = []

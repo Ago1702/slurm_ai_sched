@@ -9,11 +9,16 @@ import step
 import argparse
 
 GRES_TEMP = load_template('gres.conf.step')
+SL_CONF_TEMP =load_template('slurm.conf.step')
 
 def print_gres(filename, nodes:list[Node]):
     gres_nodes = [node for node in nodes if node.gres != 0]
     with open(filename, 'wb') as f:
         GRES_TEMP.stream(f, nodes=gres_nodes,)
+
+def print_slurm_conf(filename, nodes:list[Node]):
+    with open(filename, 'wb') as f:
+        SL_CONF_TEMP.stream(f, nodes=nodes,)
 
 
 

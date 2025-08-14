@@ -160,24 +160,25 @@ def node_parser(line:str) -> dict:
                 args['gres'] = int(num[-1])
     return args
 
+def node_update(default, node_dict):
+    for k in set(default.keys()).difference(node_dict.keys()):
+        node_dict[k] = default[k]
+    if 'procs' not in node_dict.keys() and 'core_sockets' in node_dict.keys():
+        node_dict['procs'] = node_dict['core_sockets'] * node_dict['sockets']
+    if 'core_sockets' in node_dict.keys():
+        node_dict.pop('core_sockets')
+
 def node_reader(lines:list[str]) -> list[Node]:
     node_dicts = []
     default = {}
     for line in lines:
         node_dict = node_parser(line)
-
         if node_dict['name'] == 'DEFAULT':
             default = node_dict
         else:
+            node_update(default, node_dict)
             node_dicts.append(node_dict)
-    
     nodes = []
     for node_dict in node_dicts:
-        for k in set(default.keys()).difference(node_dict.keys()):
-            node_dict[k] = default[k]
-        if 'procs' not in node_dict.keys():
-            node_dict['procs'] = node_dict['core_sockets'] * node_dict['sockets']
-        if 'core_sockets' in node_dict.keys():
-            node_dict.pop('core_sockets')
         nodes.append(Node(**node_dict))
     return nodes
