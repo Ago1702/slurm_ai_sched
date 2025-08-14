@@ -1,0 +1,5 @@
+AutoDetect=off
+
+%for node in nodes:
+NodeName={{node.node_name()}} Name=gpu Count={{node.gres}}
+%endfor

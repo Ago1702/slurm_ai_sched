@@ -45,7 +45,6 @@ class JobGenerator:
             hour=hour,
             minute=minute,
         )
-
     
     def generate_job_time(self, long:bool=False):
         req_time = self.generate_time(minute_b=not long, hour_b=long)
@@ -122,17 +121,3 @@ class JobGenerator:
             return None
         flags = self.stringfy_flags(req_time, n_tasks, n_task_nodes, account, **param)
         return Job(job_id, sim_walltime, user_id, flags)
-
-if __name__ == '__main__':
-    flags = [
-        '-t 00:01:00',
-        '-n 12',
-        '--ntasks-per-node=12',
-        '-A account2',
-        '-p normal',
-        '-q normal'
-    ]
-
-    job = Job('jobid_1001', '0', 'user5', flags=flags)
-    print(job)
-        

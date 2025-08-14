@@ -67,6 +67,7 @@ class Node(object):
 
     def __str__(self):
         return self.node_name()
+    
     def __repr__(self):
         return self.node_name()
 class NodeGenerator(object):
@@ -154,10 +155,9 @@ def node_parser(line:str) -> dict:
                 args['features'] = val.split(',')
             
             case 'Gres':
-                rx = re.compile(r'gpu:\d+')
-                num = rx.findall(val)
-                if len(num) == 1:
-                    args['gres'] = int(re.sub(r'[^0-9]', '', num[0]))
+                rx = re.compile(r'gpu:(.*:)*(\d+)')
+                num = rx.findall(val)[0]
+                args['gres'] = int(num[-1])
     return args
 
 def node_reader(lines:list[str]) -> list[Node]:
