@@ -1,5 +1,6 @@
 import sys
 import step
+import re
 
 from slurm_load.utils import print_users_sim
 
@@ -15,3 +16,12 @@ def load_template(filename:str) -> step.Template:
 
 def eprint(*args, **kwargs):
     print(*args, file=sys.stderr, **kwargs)
+
+def read_account(p) -> dict[str, str]:
+    rx = re.compile(r'^add user name=(.*) DefaultAccount=(.*) MaxSubmitJobs=\d+', flags=re.MULTILINE)
+    with open(p, mode='r') as f:
+        text = f.read()
+        accounts = rx.findall(text)
+        accounts = {account[0]: account[1] for account in accounts}
+        accounts.pop('admin')
+        return accounts
