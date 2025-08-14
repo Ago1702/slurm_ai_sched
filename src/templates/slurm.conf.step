@@ -114,8 +114,7 @@ NodeName={{node.slurm_formatting()}}
 %endfor
 
 
-PartitionName=normal Nodes=n[1-4],m[1-4],g1,b1 Default=YES DefMemPerCPU=2800 MaxTime=INFINITE State=UP
-PartitionName=debug Nodes=n[1-2] DefMemPerCPU=2800 MaxTime=INFINITE State=UP
+PartitionName=normal Nodes={{','.join([node.node_name() for node in nodes])}} Default=YES DefMemPerCPU=2800 MaxTime=INFINITE State=UP
 
 #NodeName=bumblebee Procs=16 Sockets=1 CoresPerSocket=8 ThreadsPerCore=2
 FrontEndName=localhost

@@ -21,8 +21,7 @@ class User(object):
         if isinstance(other, User):
             return self.usr_id < other.usr_id
         raise NotImplementedError('Not Implemented Comparison') 
-
-    
+   
 class UserGenerator(object):
     '''
     Class UserGenerator: A simple generator for users

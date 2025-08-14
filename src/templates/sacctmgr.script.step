@@ -1,0 +1,22 @@
+# add/modify QOS
+modify QOS set normal Priority=0
+add QOS Name=supporters Priority=100
+# add cluster
+add cluster Name=micro Fairshare=1 QOS=normal,supporters
+# add accounts
+
+add account name=account0 Fairshare=100
+%for account in accounts:
+add account name={{account}} Fairshare=100
+%endfor
+# add admin
+add user name=admin DefaultAccount=account0 MaxSubmitJobs=1000 AdminLevel=Administrator
+# add users
+%for k in users.keys():
+add user name={{k}} DefaultAccount={{users[k]}} MaxSubmitJobs={{max_job}}
+%endfor
+# add users to qos level
+modify user set qoslevel="normal,supporters"
+
+# check results
+list associations format=Account,Cluster,User,Fairshare tree withd
