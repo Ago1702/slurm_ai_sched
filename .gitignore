@@ -181,3 +181,5 @@ cython_debug/
 .cursorindexingignore
 .vscode
 tests
+src/templates/slurm.cert
+src/templates/slurm.key

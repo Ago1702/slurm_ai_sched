@@ -17,8 +17,8 @@ class Job(object):
     def __str__(self):
         base_job_str = f"-J {self.job_id} -sim-walltime {self.sim_walltime} --uid={self.uid}"
         for option in self.flags:
-            base_job_str = base_job_str + option + ' '
-        return base_job_str + 'pseudo.job'
+            base_job_str = base_job_str + ' ' + option
+        return base_job_str + ' pseudo.job'
 
 class JobGenerator:
     '''

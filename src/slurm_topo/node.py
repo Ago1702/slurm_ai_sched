@@ -70,6 +70,7 @@ class Node(object):
     
     def __repr__(self):
         return self.node_name()
+    
 class NodeGenerator(object):
     '''
     Class NodeGenerator: Random Computing Node generator

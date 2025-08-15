@@ -1,4 +1,4 @@
-ClusterName=micro
+ClusterName={{name}}
 
 #AuthType=auth/munge
 AuthType=auth/none
@@ -13,8 +13,8 @@ ReturnToService=1
 MessageTimeout=60
 JobRequeue=0
 
-JobCredentialPrivateKey=/home/slurm/work/micro_cluster/etc/slurm.key
-JobCredentialPublicCertificate=/home/slurm/work/micro_cluster/etc/slurm.cert
+JobCredentialPrivateKey={{path}}/etc/slurm.key
+JobCredentialPublicCertificate={{path}}/etc/slurm.cert
 
 
 SlurmdParameters=config_overrides
@@ -49,7 +49,7 @@ Waittime=0
 SchedulerType=sched/backfill
 SchedulerParameters=bf_max_job_user=200,bf_window=1440,bf_interval=30,bf_max_time=30,sched_interval=60,bf_max_job_test=1200,default_queue_depth=1200,bf_continue
 FairShareDampeningFactor=5
-SlurmSchedLogFile=/home/slurm/work/micro_cluster/log/sched.log
+SlurmSchedLogFile={{path}}/log/sched.log
 SelectType=select/cons_tres
 SelectTypeParameters=CR_Core_Memory,CR_CORE_DEFAULT_DIST_BLOCK
 PriorityType=priority/multifactor
@@ -72,13 +72,13 @@ SlurmdDebug=info
 DebugFlags=Backfill
 SlurmSchedLogLevel=1
 
-SlurmctldLogFile=/home/slurm/work/micro_cluster/log/slurmctld.log
-SlurmdLogFile=/home/slurm/work/micro_cluster/log/slurmd.log
-SlurmdSpoolDir=/home/slurm/work/micro_cluster/var/spool
-StateSaveLocation=/home/slurm/work/micro_cluster/var/state
+SlurmctldLogFile={{path}}/log/slurmctld.log
+SlurmdLogFile={{path}}/log/slurmd.log
+SlurmdSpoolDir={{path}}/var/spool
+StateSaveLocation={{path}}/var/state
 
 JobCompType=jobcomp/filetxt
-JobCompLoc=/home/slurm/work/micro_cluster/log/jobcomp.log
+JobCompLoc={{path}}/log/jobcomp.log
 
 
 # ACCOUNTING
@@ -100,17 +100,9 @@ KillOnBadExit=1
 #DefaultStoragePort=29001
 #SlurmctldPort=29002
 
-
-
-NodeName=DEFAULT RealMemory=48000 Procs=12 Sockets=2 CoresPerSocket=6 ThreadsPerCore=1
-NodeName=n[1-4] Procs=12 Sockets=2 CoresPerSocket=6 ThreadsPerCore=1 Feature=IB,CPU-N
-NodeName=m[1-4] Procs=12 Sockets=2 CoresPerSocket=6 ThreadsPerCore=1 Feature=IB,CPU-M
-NodeName=g1 Procs=12 Sockets=2 CoresPerSocket=6 ThreadsPerCore=1 Gres=gpu:2 Feature=IB,CPU-G
-NodeName=b1 RealMemory=512000 Procs=12 Sockets=2 CoresPerSocket=6 ThreadsPerCore=1 Feature=IB,CPU-G,BigMem
-
 NodeName=DEFAULT RealMemory=48000 Procs=12 Sockets=2 CoresPerSocket=6 ThreadsPerCore=1
 %for node in nodes:
-NodeName={{node.slurm_formatting()}}
+{{node.slurm_formatting()}}
 %endfor
 
 

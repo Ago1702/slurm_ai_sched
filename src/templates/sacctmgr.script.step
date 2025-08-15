@@ -4,7 +4,6 @@ add QOS Name=supporters Priority=100
 # add cluster
 add cluster Name=micro Fairshare=1 QOS=normal,supporters
 # add accounts
-
 add account name=account0 Fairshare=100
 %for account in accounts:
 add account name={{account}} Fairshare=100
