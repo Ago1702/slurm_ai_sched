@@ -73,9 +73,9 @@ class JobGenerator:
         if constr is not None:
             flags.append(f'--constraint={constr}')
         if mem > 0:
-            flags.append(f'-mem={mem}')
+            flags.append(f'--mem={mem}')
         if gres > 0:
-            flags.append(f'--gres:gpu={gres}')
+            flags.append(f'--gres=gpu:{gres}')
         
         return flags
     
