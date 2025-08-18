@@ -53,7 +53,7 @@ class JobGenerator:
         return req_time, sim_walltime
 
     def generate_job_tasks(self, max_task, args={}):
-        n_task_nodes = rnd.randint(1, max_task)
+        n_task_nodes = rnd.randint(1, max_task + 1)
         num_nodes = self.topology.count_nodes(procs=n_task_nodes, **args)
         if num_nodes == 0:
             return 0, 0

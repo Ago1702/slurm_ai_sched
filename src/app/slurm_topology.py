@@ -3,6 +3,7 @@ from slurm_topo.node import NodeGenerator, Node
 from slurm_load.user import UserGenerator, User
 from slurm_load.utils import print_users_sim
 from slurm_load.job import JobGenerator
+from slurm_load.workload import WorkLoad
 
 from pathlib import Path
 
@@ -60,8 +61,8 @@ if __name__ == '__main__':
     
 
     node_gen = NodeGenerator()
-    topo_gen = TopologyGenerator(2, 6, node_gen)
-    topo = topo_gen.generate_topology(6)
+    topo_gen = TopologyGenerator(2, 12, node_gen)
+    topo = topo_gen.generate_topology(2)
     printer = TopologyPrinter()
 
     printer.print_topology(f"{etc_dir.absolute()}/topology.conf", topo.topo)
@@ -84,21 +85,12 @@ if __name__ == '__main__':
     print_sim_conf(f"{etc_dir.absolute()}/sim.conf", path=p.as_posix())
     shutil.copy('templates/slurm.cert', (etc_dir / 'slurm.cert').as_posix())
     shutil.copy('templates/slurm.key', (etc_dir / 'slurm.key').as_posix())
-    jobs = []
     job_gen = JobGenerator(topology=topo)
-    for i in range(1, 6):
-        id = 1000 + i
-        user:User = rnd.choice(users[1:])
-        user = user.usr
-        account = accounts[user]
-        job = job_gen.generate_classic_job(id, user, account)
-        while job is None:
-            job = job_gen.generate_classic_job(id, user, account)
-        jobs.append(job)
-    dt = 0
+    workload_gen = WorkLoad(users[1:], accounts, job_gen)
+    jobs = workload_gen.generate_workload(30)
     with open(workload_dir / 'first_job.events', 'w') as f:
-        for job in jobs:
-            f.write(f"-dt {dt} -e submit_batch_job | {job}\n")
-            dt += rnd.randint(1, 30)
+        for td, job in jobs:
+            f.write(f"-dt {td} -e submit_batch_job | {job}\n")
+            td += rnd.randint(1, 30)
 
     sys.exit(0)
