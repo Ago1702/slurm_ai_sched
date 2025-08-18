@@ -40,6 +40,7 @@ def print_acc_manager(filename, users:dict, max_job=1000):
 def print_slurmDB(filename, path):
     with open(filename, 'wb') as f:
         SL_DB_TMP.stream(f, path=path)
+    os.chmod(filename, 0o600)
 
 def print_sim_conf(filename, path):
     with open(filename, 'wb') as f:
