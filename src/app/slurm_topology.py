@@ -50,7 +50,7 @@ def print_sim_conf(filename, path):
 
 
 if __name__ == '__main__':
-    p = 'C:/Users/david/Uni/Tesi/slurm_ai_sched/src/tests/topology_gen'
+    p = '/home/slurm/work/test'
     p = Path(p)
 
     etc_dir = p / 'etc'
@@ -62,8 +62,8 @@ if __name__ == '__main__':
     
 
     node_gen = NodeGenerator()
-    topo_gen = TopologyGenerator(2, 12, node_gen)
-    topo = topo_gen.generate_topology(2)
+    topo_gen = TopologyGenerator(7, 12, node_gen)
+    topo = topo_gen.generate_topology(6)
     printer = TopologyPrinter()
 
     printer.print_topology(f"{etc_dir.absolute()}/topology.conf", topo.topo)
@@ -88,10 +88,9 @@ if __name__ == '__main__':
     shutil.copy('templates/slurm.key', (etc_dir / 'slurm.key').as_posix())
     job_gen = JobGenerator(topology=topo)
     workload_gen = WorkLoad(users[1:], accounts, job_gen)
-    jobs = workload_gen.generate_workload(30)
+    jobs = workload_gen.generate_workload(50)
     with open(workload_dir / 'first_job.events', 'w') as f:
         for td, job in jobs:
             f.write(f"-dt {td} -e submit_batch_job | {job}\n")
-            td += rnd.randint(1, 30)
 
     sys.exit(0)

@@ -79,7 +79,7 @@ class JobGenerator:
         
         return flags
     
-    def generate_classic_job(self, job_id:str, user_id:str, account:str, long:bool=False, feat='DEFAULT'):
+    def generate_classic_job(self, job_id:str, user_id:str, account:str, long:bool=True, feat='DEFAULT'):
         req_time, sim_walltime = self.generate_job_time(long)
         n_task_nodes, n_tasks = self.generate_job_tasks(self.topology.max_tasks_node[feat])
         if n_task_nodes == 0:
@@ -93,7 +93,7 @@ class JobGenerator:
         else:
             return rnd.randint(1, self.topology.max_gres[feat] + 1)
 
-    def generate_gpu_job(self, job_id:str, user_id:str, account:str, long:bool=False, feat='DEFAULT'):
+    def generate_gpu_job(self, job_id:str, user_id:str, account:str, long:bool=True, feat='DEFAULT'):
         req_time, sim_walltime = self.generate_job_time(long)
         gres = self.generate_gres(feat)
         n_task_nodes, n_tasks = self.generate_job_tasks(self.topology.max_tasks_node[feat], {'gres':gres})
@@ -103,7 +103,7 @@ class JobGenerator:
         return Job(job_id, sim_walltime, user_id, flags)
     
     def generate_mem(self, feat):
-        mem = rnd.randint(self.min_mem, self.topology.max_mem[feat] + 1)
+        mem = rnd.randint(self.min_mem, int(self.topology.max_mem[feat] * 4 / 5))
         mem -= mem % 1000
         return mem
 

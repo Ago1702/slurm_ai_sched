@@ -12,7 +12,7 @@ class WorkLoad(object):
     '''
 
     def __init__(self, users:list[User], accounts:dict, job_gen:JobGenerator, 
-                 dt_range:int|list[int] = 30, probability:list = [0.33, 0.66], retry = 5):
+                 dt_range:int|list[int] = [1800, 6000], probability:list = [0.7, 0.9], retry = 5):
         self.users = users
         self.accounts = accounts
         self.job_gen = job_gen
