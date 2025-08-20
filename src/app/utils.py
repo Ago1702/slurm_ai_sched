@@ -4,6 +4,9 @@ import re
 
 from slurm_load.utils import print_users_sim
 
+from slurm_topo.node import Node, read_node
+from slurm_topo.topology import Topology, read_topology
+
 TEMPLATE_LOC = "./templates/"
 
 def load_template(filename:str) -> step.Template:
@@ -25,3 +28,21 @@ def read_account(p) -> dict[str, str]:
         accounts = {account[0]: account[1] for account in accounts}
         accounts.pop('admin')
         return accounts
+
+def node_extract(p) -> list[Node]|None:
+    rx = re.compile(r'^NodeName=.* (.*=.*)*')
+    with open(p, mode='r') as f:
+        lines = f.readlines()
+        lines = [line.rstrip('\n') for line in lines if rx.match(line)]
+    if len(lines) == 0:
+        return None
+    return read_node(lines)
+
+def topology_extract(p, nodes) -> Topology:
+    rx = re.compile(r'^SwitchName=.* (.*=.*)*')
+    with open(p, mode='r') as f:
+        lines = f.readlines()
+        lines = [line.rstrip('\n') for line in lines if rx.match(line)]
+    if len(lines) == 0:
+        return None
+    return Topology(read_topology(nodes, lines))

@@ -71,6 +71,10 @@ class Node(object):
     def __repr__(self):
         return self.node_name()
     
+    def __lt__(self, other):
+        if isinstance(other, Node):
+            return self.name < other.name
+    
 class NodeGenerator(object):
     '''
     Class NodeGenerator: Random Computing Node generator
@@ -169,7 +173,7 @@ def node_update(default, node_dict):
     if 'core_sockets' in node_dict.keys():
         node_dict.pop('core_sockets')
 
-def node_reader(lines:list[str]) -> list[Node]:
+def read_node(lines:list[str]) -> list[Node]:
     node_dicts = []
     default = {}
     for line in lines:

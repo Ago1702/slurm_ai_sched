@@ -50,7 +50,7 @@ def print_sim_conf(filename, path):
 
 
 if __name__ == '__main__':
-    p = '/home/slurm/work/test'
+    p = 'C:/Users/david/Uni/Tesi/slurm_ai_sched/src/tests/topology_gen'
     p = Path(p)
 
     etc_dir = p / 'etc'
