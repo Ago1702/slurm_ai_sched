@@ -1,11 +1,15 @@
 import sys
 import step
 import re
+import torch
+
+from datetime import timedelta
 
 from slurm_load.utils import print_users_sim
 
 from slurm_topo.node import Node, read_node
 from slurm_topo.topology import Topology, read_topology
+from slurm_load.job import Job
 
 TEMPLATE_LOC = "./templates/"
 
@@ -46,3 +50,35 @@ def topology_extract(p, nodes) -> Topology:
     if len(lines) == 0:
         return None
     return Topology(read_topology(nodes, lines))
+
+# Questo è inguardabile, è da sistemare
+def extract_flags_value(flags:list[str]):
+    values = [0] * 5
+    for flag in flags:
+        if flag.startswith('--'):
+            name, value = flag.split('=')
+        else:
+            name, value = flag.split(' ')
+        if name == '-n':
+            values[0] = int(value)
+        if name == '--ntasks-per-node':
+            values[1] = int(value)
+        if name == '-t':
+            value = value.split(':')
+            values[2] = int(timedelta(hours=int(value[0]), minutes=int(value[1]), seconds=int(value[2])).total_seconds())
+        if name == '--mem':
+            values[3] = int(value)
+        if name == '--gres':
+            values[4] = int(value.split(':')[1])
+    return values 
+
+def vectorize_job(jobs:list[tuple[int, Job]]) -> torch.Tensor:
+    jobs_data = []
+    for td, job in jobs:
+        flags = job.flags
+        values = extract_flags_value(flags)
+        jobs_data.append(values)
+    t_job = torch.tensor(jobs_data)
+    return t_job
+
+        
