@@ -46,6 +46,35 @@ def print_sim_conf(filename, path):
     with open(filename, 'wb') as f:
         SIM_CONF.stream(f, path=path)
 
+class TopologyApp:
+    def __init__(self, **d_args):
+        if 'path' in d_args.keys():
+            self.etc_path = Path(d_args['path']) / 'etc'
+            self.workload_path = Path(d_args['path']) / 'workload'
+            self.secondary_path = Path(d_args['path'])
+
+    def print_gres(self, nodes:list[Node]):
+        print_gres(self.etc_path.absolute() / "gres.conf", nodes)
+
+    def print_slurm_conf(self, nodes:list[Node], name='micro'):
+        print_slurm_conf(self.etc_path.absolute() / "slurm.conf", nodes, self.secondary_path.as_posix(), name)
+    
+    def print_acc_manager(self, users:dict, max_job=1000):
+        print_acc_manager(self.etc_path.absolute() / "user.sim", users, max_job)
+    
+    def print_slurmDB(self):
+        print_slurmDB(self.etc_path.absolute() / "slurmdbd.conf", self.secondary_path.as_posix())
+
+    def print_users_sim(self, users:set[User]):
+        print_users_sim(self.etc_path.absolute() / "users.sim", users)
+
+    def print_sim_conf(self):
+        print_sim_conf(self.etc_path.absolute() / "sim.conf", self.secondary_path.as_posix())
+
+    def print_workload(self, jobs):
+        with open(self.workload_path / 'first_job.events', 'w') as f:
+            for td, job in jobs:
+                f.write(f"-dt {td} -e submit_batch_job | {job}\n")
 
 
 

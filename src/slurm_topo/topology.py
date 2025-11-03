@@ -133,7 +133,6 @@ class TopologyGenerator(object):
             self.increment_char_()
         return Topology(topo)
 
-
 def read_topology(nodes:list[Node], lines:list[str]):
     switches = {}
     nodes_dict = {node.node_name(): node for node in nodes}
