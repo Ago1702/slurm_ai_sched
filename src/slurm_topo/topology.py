@@ -70,7 +70,7 @@ class TopologyGenerator(object):
     Class TopologyGenerator: A simple topology generator
     '''
 
-    def __init__(self, min_size, max_size, node_gen=NodeGenerator()):
+    def __init__(self, min_size=4, max_size=8, node_gen=NodeGenerator(), **kwargs):
         #Add some probability
         self.node_gen = node_gen
         self.min_size = min_size

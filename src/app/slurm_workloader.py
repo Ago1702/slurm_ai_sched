@@ -9,6 +9,10 @@ from pathlib import Path
 
 import sys
 
+class WorkloaderApp:
+    def __init__(self, path):
+        pass
+
 if __name__ == '__main__':
     p = 'C:/Users/david/Uni/Tesi/slurm_ai_sched/src/tests/topology_gen'
     p = Path(p)

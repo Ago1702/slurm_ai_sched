@@ -27,7 +27,7 @@ class UserGenerator(object):
     Class UserGenerator: A simple generator for users
     '''
 
-    def __init__(self, min_usr:int, max_usr:int, min_group:int, max_group:int):
+    def __init__(self, min_usr:int=4, max_usr:int=8, min_group:int=2, max_group:int=4, **kwargs):
         if min_usr > max_usr:
             raise ValueError("min_usr cannot be greater than max_usr")
         if min_group > max_group:

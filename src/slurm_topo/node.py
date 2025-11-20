@@ -79,7 +79,7 @@ class NodeGenerator(object):
     '''
     Class NodeGenerator: Random Computing Node generator
     '''
-    def __init__(self, min_proc:int=0, max_proc:int=7, min_mem:int=6, max_mem:int=33, min_sock:int=1, max_sock:int=3, min_gres:int=1, max_gres:int=9):
+    def __init__(self, min_proc:int=0, max_proc:int=7, min_mem:int=6, max_mem:int=33, min_sock:int=1, max_sock:int=3, min_gres:int=1, max_gres:int=9, **kwargs):
         self.min_proc = min_proc
         self.max_proc = max_proc
         self.min_mem = min_mem

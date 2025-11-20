@@ -106,7 +106,7 @@ NodeName=DEFAULT RealMemory=48000 Procs=12 Sockets=2 CoresPerSocket=6 ThreadsPer
 %endfor
 
 
-PartitionName=normal Nodes={{','.join([node.node_name() for node in nodes])}} Default=YES DefMemPerCPU=2800 MaxTime=INFINITE State=UP
+PartitionName=normal Nodes={{','.join([node.node_name() for node in nodes])}} Default=YES DefMemPerCPU={{min_mem}} MaxTime=INFINITE State=UP
 
 #NodeName=bumblebee Procs=16 Sockets=1 CoresPerSocket=8 ThreadsPerCore=2
 FrontEndName=localhost

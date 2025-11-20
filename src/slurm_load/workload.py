@@ -12,7 +12,7 @@ class WorkLoad(object):
     '''
 
     def __init__(self, users:list[User], accounts:dict, job_gen:JobGenerator, 
-                 dt_range:int|list[int] = [1800, 6000], probability:list = [0.7, 0.9], retry = 5):
+                 dt_range:int|list[int] = [1800, 6000], probability:list = [0.7, 0.9], retry = 5, **kwargs):
         self.users = users
         self.accounts = accounts
         self.job_gen = job_gen
@@ -29,6 +29,13 @@ class WorkLoad(object):
     
     def set_seed(self, seed:int):
         rnd.seed(seed)
+    
+    def reset(self):
+        '''
+        Reset generator internal state
+        '''
+        self.ts = 0
+        self.jb_id = 1
 
     def generate_job(self) -> tuple[int, Job]:
         td = self.ts
@@ -56,7 +63,18 @@ class WorkLoad(object):
         self.jb_id += 1
         return td, job
     
-    def generate_workload(self, num:int) -> list[tuple]:
+    def generate_workload(self, num:int, reset:bool=True) -> list[tuple]:
+        """
+        Generate a workload with @num jobs
+
+        Args:
+            num (int): Jobs number
+            reset (bool, optional): Reset the internal state of the machine at the beginning. Defaults to True.
+
+        Returns:
+            list[tuple]: a list of couple: submission time (sec.) and the Job submitted
+        """
+        if reset: self.reset()
         workload = []
         for i in range(num):
             td, job = self.generate_job()

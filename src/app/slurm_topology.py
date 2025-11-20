@@ -30,7 +30,7 @@ def print_gres(filename, nodes:list[Node]):
 
 def print_slurm_conf(filename, nodes:list[Node], path='lol', name='micro'):
     with open(filename, 'wb') as f:
-        SL_CONF_TEMP.stream(f, nodes=nodes, path=path, name=name)
+        SL_CONF_TEMP.stream(f, nodes=nodes, path=path, name=name, min_mem=500)
 
 def print_acc_manager(filename, users:dict, max_job=1000):
     with open(filename, 'wb') as f:
@@ -47,11 +47,13 @@ def print_sim_conf(filename, path):
         SIM_CONF.stream(f, path=path)
 
 class TopologyApp:
-    def __init__(self, **d_args):
-        if 'path' in d_args.keys():
-            self.etc_path = Path(d_args['path']) / 'etc'
-            self.workload_path = Path(d_args['path']) / 'workload'
-            self.secondary_path = Path(d_args['path'])
+    def __init__(self, path, secondary_path=None):
+        self.path = Path(path)
+        self.etc_path = self.path / 'etc'
+        self.etc_path.mkdir(exist_ok=True)
+        self.workload_path = self.path / 'workload'
+        self.workload_path.mkdir(exist_ok=True)
+        self.secondary_path = self.path if secondary_path is None else secondary_path
 
     def print_gres(self, nodes:list[Node]):
         print_gres(self.etc_path.absolute() / "gres.conf", nodes)
@@ -60,7 +62,7 @@ class TopologyApp:
         print_slurm_conf(self.etc_path.absolute() / "slurm.conf", nodes, self.secondary_path.as_posix(), name)
     
     def print_acc_manager(self, users:dict, max_job=1000):
-        print_acc_manager(self.etc_path.absolute() / "user.sim", users, max_job)
+        print_acc_manager(self.etc_path.absolute() / "sacctmgr.script", users, max_job)
     
     def print_slurmDB(self):
         print_slurmDB(self.etc_path.absolute() / "slurmdbd.conf", self.secondary_path.as_posix())
@@ -71,10 +73,18 @@ class TopologyApp:
     def print_sim_conf(self):
         print_sim_conf(self.etc_path.absolute() / "sim.conf", self.secondary_path.as_posix())
 
+    def print_topology(self, topology):
+        printer = TopologyPrinter()
+        printer.print_topology(f"{self.etc_path.absolute()}/topology.conf", topology.topo)
+
     def print_workload(self, jobs):
         with open(self.workload_path / 'first_job.events', 'w') as f:
             for td, job in jobs:
                 f.write(f"-dt {td} -e submit_batch_job | {job}\n")
+    def copy_cert(self):
+        shutil.copy('templates/slurm.cert', (self.etc_path.absolute() / 'slurm.cert').as_posix())
+        shutil.copy('templates/slurm.key', (self.etc_path.absolute() / 'slurm.key').as_posix())
+        shutil.copy('templates/start.sh', (self.etc_path.absolute().parent / 'start.sh').as_posix())
 
 
 
