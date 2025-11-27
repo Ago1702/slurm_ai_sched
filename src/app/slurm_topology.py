@@ -22,6 +22,7 @@ SL_CONF_TEMP =load_template('slurm.conf.step')
 ACC_MNG_TEMP = load_template('sacctmgr.script.step')
 SL_DB_TMP = load_template('slurmdbd.conf.step')
 SIM_CONF = load_template('sim.conf.step')
+START = load_template("start.sh")
 
 def print_gres(filename, nodes:list[Node]):
     gres_nodes = [node for node in nodes if node.gres != 0]
@@ -84,7 +85,11 @@ class TopologyApp:
     def copy_cert(self):
         shutil.copy('templates/slurm.cert', (self.etc_path.absolute() / 'slurm.cert').as_posix())
         shutil.copy('templates/slurm.key', (self.etc_path.absolute() / 'slurm.key').as_posix())
-        shutil.copy('templates/start.sh', (self.etc_path.absolute().parent / 'start.sh').as_posix())
+        with open((self.etc_path.absolute().parent / 'start.sh').as_posix(), 'wb') as f:
+            dtstart = rnd.randint(30,150)
+            START.stream(f, dtstart=dtstart)
+            pass
+        #shutil.copy('templates/start.sh', (self.etc_path.absolute().parent / 'start.sh').as_posix())
 
 
 

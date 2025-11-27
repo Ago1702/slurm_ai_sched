@@ -2,7 +2,7 @@
 export CLUS_DIR=$(pwd)
 export MACHINE_NAME="slurmsimcont"
 export RUN_NAME="test1"
-export dtstart=59
+export dtstart={{dtstart}}
 export replica=1
 
 slurmsim -v run_sim  -d \
