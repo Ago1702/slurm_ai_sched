@@ -10,5 +10,5 @@ slurmsim -v run_sim  -d \
             -a ${CLUS_DIR}/etc/sacctmgr.script \
             -w ${CLUS_DIR}/workload/first_job.events \
             -r ${CLUS_DIR}/results \
-            -rt 300 \
+#            -rt 300 \
             -dtstart $dtstart

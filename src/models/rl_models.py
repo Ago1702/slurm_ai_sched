@@ -25,7 +25,7 @@ class TransformerLayer(nn.Module):
         self.ffwd = nn.Sequential(
             nn.Linear(embedded_dim, embedded_dim),
             nn.LayerNorm(embedded_dim),
-            nn.ReLU(),
+            nn.LeakyReLU(),
         )
 
     def forward(self, x:torch.Tensor) -> torch.Tensor:
@@ -68,7 +68,64 @@ class QNet(nn.Module):
             x = attention.forward(x)
         cls_token = x[:, 0, :]
         return self.classifier(cls_token)
+
+class SlurmNet(nn.Module):
+    def __init__(self, input_dim:int, mid_dim:int, output_dim:int, hidden_dim:int=128, depth_first:int=2, depth_second:int=1, dropout=0.5):
+        super().__init__()
+        self.input_dim = input_dim
+        self.output_dim = output_dim
+        self.mid_dim = mid_dim
+        self.hidden_dim = hidden_dim
+        self.eps = 0.99
+        self.drop = dropout
+        self.input_layer = nn.Sequential(
+            nn.LayerNorm(self.input_dim),
+            nn.Linear(self.input_dim, self.hidden_dim),
+            nn.LeakyReLU(),
+        )
+        self.hidden_first = nn.ModuleList([nn.Sequential(
+            nn.LayerNorm(self.hidden_dim),
+            nn.Linear(self.hidden_dim, self.hidden_dim),
+            nn.Dropout(self.drop),
+            nn.LeakyReLU(),
+        ) for _ in range(depth_first)])
+        self.mid_layer = nn.Sequential(
+            nn.LayerNorm(self.hidden_dim),
+            nn.Linear(self.hidden_dim, 1),
+            nn.LeakyReLU(),
+        )
+
+        self.input_mid =  nn.Sequential(
+            nn.LayerNorm(self.mid_dim),
+            nn.Linear(self.mid_dim, self.hidden_dim),
+            nn.LeakyReLU(),
+        )
+        self.hidden_second = nn.ModuleList([nn.Sequential(
+            nn.LayerNorm(self.hidden_dim),
+            nn.Linear(self.hidden_dim, self.hidden_dim),
+            nn.Dropout(self.drop),
+            nn.LeakyReLU(),
+        ) for _ in range(depth_second)])
         
+        self.output = nn.Sequential(
+            nn.LayerNorm(self.hidden_dim),
+            nn.Linear(self.hidden_dim, 1),
+            nn.ReLU(),
+        )
+
+    def forward(self, X):
+        X = self.input_layer(X)
+        for hidden in self.hidden_first:
+            x_temp = hidden.forward(X)
+            X = X + x_temp
+        X = self.mid_layer(X)
+        X = X.squeeze(-1)
+        X = self.input_mid(X)
+        for hidden in self.hidden_second:
+            x_temp = hidden.forward(X)
+            X = X + x_temp
+        return self.output(X)
+
 class ActionNet(nn.Module):
     def __init__(self, input_dim:int, output_dim:int, hidden_dim:int=128, depth:int=3):
         super().__init__()

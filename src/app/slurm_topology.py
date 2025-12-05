@@ -14,6 +14,7 @@ import numpy.random as rnd
 import shutil
 import sys
 import os
+import stat
 import step
 import argparse
 
@@ -82,14 +83,18 @@ class TopologyApp:
         with open(self.workload_path / 'first_job.events', 'w') as f:
             for td, job in jobs:
                 f.write(f"-dt {td} -e submit_batch_job | {job}\n")
+    def print_start(self):
+        filename = (self.etc_path.absolute().parent / 'start.sh').as_posix()
+        with open(filename, 'wb') as f:
+            dtstart = rnd.randint(30,150)
+            START.stream(f, dtstart=dtstart)
+        perm = os.stat(filename)
+        os.chmod(filename, perm.st_mode | stat.S_IEXEC)
+        
+
     def copy_cert(self):
         shutil.copy('templates/slurm.cert', (self.etc_path.absolute() / 'slurm.cert').as_posix())
         shutil.copy('templates/slurm.key', (self.etc_path.absolute() / 'slurm.key').as_posix())
-        with open((self.etc_path.absolute().parent / 'start.sh').as_posix(), 'wb') as f:
-            dtstart = rnd.randint(30,150)
-            START.stream(f, dtstart=dtstart)
-            pass
-        #shutil.copy('templates/start.sh', (self.etc_path.absolute().parent / 'start.sh').as_posix())
 
 
 

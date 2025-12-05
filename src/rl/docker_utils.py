@@ -18,12 +18,12 @@ class DockerSched:
     
     def __init__(self, name:str, local_dir, virtual_path):
         self.name = name
-        self.client = docker.from_env()
         self.mount = mount_stringify(local_dir, virtual_path)
         self.wdr = virtual_path
     
-    def execute(self, user='slurm', cmd='./start.sh'):
-        container = self.client.containers.run(
+    def execute(self, user='slurm', cmd='timeout 300s ./start.sh'):
+        client = docker.from_env()
+        container = client.containers.run(
             image="nsimakov/slurm_sim:v3.0",
             name=self.name,
             hostname="slurmsim",
@@ -33,7 +33,7 @@ class DockerSched:
             #ports=PORTS
         )
 
-        sleep(0.5)
+        sleep(5)
 
         exit_code, output = container.exec_run(
             cmd=cmd,
